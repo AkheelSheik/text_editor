@@ -19,16 +19,16 @@ impl Editor {
     fn repl(&mut self) -> Result<(), std::io::Error> {
         enable_raw_mode()?;
         loop {
-            if let Key(event) = read()? {
-                println!("{event:?} \r");
-                let Char(c) = event.code else {
-                    panic!("Could not get a character");
-                };
-                let mod_1 = event.modifiers;
-
-                if mod_1 == KeyModifiers::CONTROL && c == 'q' {
-                    println!("Hello");
-                    self.should_quit = true;
+            if let Key(KeyEvent {code,modifiers,kind,state}) = read()? {
+                println!("{code:?} {kind:?} {state:?} \r");
+                print!("\x1b[2J");
+                match code {
+                    Char('q') => {
+                        if modifiers == KeyModifiers::CONTROL {
+                            self.should_quit = true;
+                        }
+                    }
+                    _ => (),
                 }
             }
 
