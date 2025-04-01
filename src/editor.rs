@@ -2,8 +2,9 @@
 // author : Akheel Sheik
 
 use crossterm::event::{read, Event::Key, KeyCode::Char,KeyEvent,KeyModifiers,Event};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType};
-use crossterm::execute;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType,size};
+use crossterm::{execute, style::Print};
+use crossterm::cursor::{MoveToColumn,MoveToRow,MoveTo,MoveToNextLine,SavePosition,RestorePosition};
 use std::io::stdout;
 
 
@@ -17,13 +18,27 @@ impl Editor {
     }
     pub fn run(&mut self) {
         Self::initalize().unwrap();
+        let result1 = self.draw_tilda();
         let result = self.repl();
         Self::terminate().unwrap();
+        result1.unwrap();
         result.unwrap();
     }
     fn initalize() -> Result<(), std::io::Error> {
         enable_raw_mode()?;
         Self::clear_screen()
+    }
+
+    fn draw_tilda(&mut self) -> Result<(), std::io::Error> {
+        let row_columns = crossterm::terminal::size()?;
+        let tilda = "~";
+        
+        for i in (0..row_columns.1) {
+            execute!(stdout(),
+            crossterm::cursor::MoveTo(1,i),
+            crossterm::style::Print(tilda));;
+        }
+        Ok(())
     }
 
     fn terminate() -> Result<(), std::io::Error> {
@@ -38,6 +53,7 @@ impl Editor {
     fn eval(&mut self, event: &Event) {
         
         if let Key(KeyEvent {code,modifiers,..}) = event {
+            println!("{code} {modifiers}");
             match *code {
                 Char('q') => {
                     if modifiers == &KeyModifiers::CONTROL {
