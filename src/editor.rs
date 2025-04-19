@@ -1,13 +1,8 @@
 
 // author : Akheel Sheik
-
+mod terminal;
 use crossterm::event::{read, Event::Key, KeyCode::Char,KeyEvent,KeyModifiers,Event};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType,size};
-use crossterm::{execute, style::Print};
-use crossterm::cursor::{MoveToColumn,MoveToRow,MoveTo,MoveToNextLine,SavePosition,RestorePosition};
-use std::io::stdout;
-
-
+use terminal::{Terminal,Size,Position};
 pub struct Editor {
     should_quit: bool,
 }
@@ -16,110 +11,93 @@ impl Editor {
     pub fn new() -> Self {
         Editor { should_quit: false }
     }
+
     pub fn run(&mut self) {
-        Self::initalize().unwrap();
-        let result1 = self.draw_tilda();
+        Terminal::initalize().unwrap();
         let result = self.repl();
-        Self::terminate().unwrap();
-        result1.unwrap();
+        Terminal::terminate().unwrap();
         result.unwrap();
-    }
-    fn initalize() -> Result<(), std::io::Error> {
-        enable_raw_mode()?;
-        Self::clear_screen()
-    }
-
-    fn draw_tilda(&mut self) -> Result<(), std::io::Error> {
-        let row_columns = crossterm::terminal::size()?;
-        let tilda = "~";
-        
-        for i in (0..row_columns.1) {
-            execute!(stdout(),
-            crossterm::cursor::MoveTo(1,i),
-            crossterm::style::Print(tilda));;
-        }
-        Ok(())
-    }
-
-    fn terminate() -> Result<(), std::io::Error> {
-        disable_raw_mode()
-    }
-
-    fn clear_screen() -> Result<(), std::io::Error> {
-        let mut std_out = stdout();
-        execute!(std_out,Clear(ClearType::All))
-    }
-
-    fn eval(&mut self, event: &Event) {
-        
-        if let Key(KeyEvent {code,modifiers,..}) = event {
-            println!("{code} {modifiers}");
-            match *code {
-                Char('q') => {
-                    if modifiers == &KeyModifiers::CONTROL {
-                        self.should_quit = true;
-                    }
-                }
-                _ =>(),
-              }
-        }
-        
     }
 
     fn refresh_screen(&self) -> Result<(), std::io::Error> {
+        Terminal::hide_cursor();
         if self.should_quit{
-            Self::clear_screen()?;
-            print!("Goodbye");
+            Terminal::clear_screen()?;
+            Terminal::write("Goodbye!");
+        } else {
+            Self::draw_rows();
+            Terminal::move_to_cursor(Position {x:0,y:0});
+            Self::draw_welcome()?;
+            Terminal::move_to_cursor(Position {x:0,y:0});
         }
+        Terminal::show_cursor();
+        Terminal::flush();
         Ok(())
     }
 
     fn repl(&mut self) -> Result<(), std::io::Error> {
         loop {
-            let event = read()?;
-            self.eval(&event);
             self.refresh_screen()?;
             if self.should_quit {
                 break;
             }
+            let event = read()?;
+            self.eval(&event);
         }
+        Ok(())
+    }
+    fn read() -> Result<Event, std::io::Error> {
+        return Ok(read()?);
+    }
+
+    fn eval(&mut self, event: &Event) {
+        if let Key(KeyEvent {code,modifiers,..}) = event {
+            println!("{code} {modifiers}");
+            match *code {
+                Char('q') => {
+                        if modifiers == &KeyModifiers::CONTROL {
+                            self.should_quit = true;
+                        }
+                    },
+                _ => (),
+                }
+        }
+    }
+
+    fn draw_rows() -> Result<(),std::io::Error> {
+        let character = "~";
+        let Size{height,..} = Terminal::term_size()?;
         
+        for i in 0..height {
+            Terminal::clear_line()?;
+            Terminal::write(character)?;
+            if i + 1 < height {
+                Terminal::write("\r\n")?;
+            }
+        }
+       Terminal::flush();
+       Ok(())
+    }
+
+    fn draw_welcome() -> Result<(),std::io::Error> {
+        let message = "Text Editor 1.0";
+        let Size{height,width} = Terminal::term_size()?;
+
+        let message_length = "Text Editor 1.0".len() as u16;
+        let half_message:u16 = message_length/2;
+        let main_position_x = width/2 - half_message;
+        let vertical = (height/3) as u16;
+        let first_set_of_space = " ".repeat((main_position_x-1).into());
+        let second_set_of_space = " ".repeat((width-(main_position_x+message_length)).into());
+
+
+        Terminal::write(&"\r\n".repeat(vertical.into()));
+        Terminal::clear_line()?;
+        Terminal::write("~")?;
+        Terminal::write(&first_set_of_space)?;
+        Terminal::write("Text Editor 1.0")?;
+        Terminal::write(&second_set_of_space)?;
+        Terminal::flush();
         Ok(())
     }
 }
-
-        // for b in io::stdin().bytes() {
-        //     match b {
-        //         Ok(b) => {
-        //             let c = b as char;
-        //             match read() {
-        //                 Ok(Key(event)) => {
-        //                     match event.code {
-        //                         Char(c) => {
-        //                             println!("Binary: {0:08b} ASCII: {0:#03} \r",b);
-
-        //                             if c == 'q' {
-        //                                 break;
-        //                             }
-        //                         },
-        //                         _ => (),
-        //                     }
-        //                 },
-        //                 Err(err) => println!("Error: {err}"),
-        //                 _ => ()
-        //             }
-                    
-                    // if c.is_control() {
-                    //     println!("Binary: {0:08b} ASCII: {0:#03} \r",b);
-                    // } else {
-                    // }
-                    // if c == 'q' {
-                    //     break;
-                    // }
-//                 }
-//                 Err(err) => println!("Error: {err}"),
-//             }
-//         }
-
-//     }
-// }
