@@ -3,6 +3,8 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType,si
 use crossterm::{queue,style::Print, Command};
 use crossterm::cursor::{MoveTo,Show,Hide};
 use std::io::stdout;
+
+
 use std::io::{Write};
 use core::fmt::Display;
 
@@ -67,24 +69,11 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn move_to_cursor(position: Position) -> Result<(), std::io::Error> {
-        let Size{height,width} = Self::term_size()?;
-        let mut output_position = Position {x: 0,y: 0}; 
-        output_position.x = Self::constraint(position.x,width)?;
-        output_position.y = Self::constraint(position.y,height)?;
-        Self::queue_command(MoveTo(output_position.x,output_position.y))?;
+    pub fn move_to_cursor(position: Position) -> Result<(), std::io::Error> {       
+        Self::queue_command(MoveTo(position.x,position.y))?;
         Ok(())
     }
 
-    pub fn constraint(mut x: u16,max: u16) -> Result<u16,std::io::Error> {
-
-        if x > max {
-            x = max;
-        } else if x < 0 {
-           x = 0;
-        }
-        return Ok(x)
-    }
 
     pub fn term_size() -> Result<Size, std::io::Error> {
         let (width,height) = size()?;

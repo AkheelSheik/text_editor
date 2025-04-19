@@ -2,8 +2,9 @@
 // author : Akheel Sheik
 mod terminal;
 use crossterm::event::{read, Event::Key,KeyEvent,KeyModifiers,Event};
-use crossterm::event::{KeyCode::{Char,Left,Right,Up,Down,Home,End,PageUp,PageDown},KeyEventKind};
+use crossterm::event::{KeyCode,KeyEventKind};
 use terminal::{Terminal,Size,Position};
+use core::cmp::{min,max};
 pub struct Editor {
     should_quit: bool,
     mouse_position: Position
@@ -55,37 +56,60 @@ impl Editor {
     }
 
     fn eval(&mut self, event: &Event) {
-        if let Key(KeyEvent {code,modifiers,kind,..}) = event {
+        if let Key(KeyEvent {code,modifiers,kind: KeyEventKind::Press,..}) = event {
             // println!("{code} {modifiers}");
-            match *code {
-                Char('q') => {
+            match code {
+                KeyCode::Char('q') => {
                         if *modifiers == KeyModifiers::CONTROL {
                             self.should_quit = true;
                         }
                     },
-                Left => {
-                    if *kind == KeyEventKind::Press {
-                        self.mouse_position.x = self.mouse_position.x.saturating_sub(1);
-                    }
-                },
-                Right => {
-                    if *kind == KeyEventKind::Press {
-                        self.mouse_position.x = self.mouse_position.x.saturating_add(1);
-                    }
-                },
-                Up => {
-                    if *kind == KeyEventKind::Press {
-                        self.mouse_position.y = self.mouse_position.y.saturating_sub(1);
-                    }
-                },
-                Down => {
-                    if *kind == KeyEventKind::Press {
-                        self.mouse_position.y = self.mouse_position.y.saturating_add(1);
-                    }
+                KeyCode::Right 
+                | KeyCode::Left
+                | KeyCode::Down
+                | KeyCode::Up
+                | KeyCode::Home
+                | KeyCode::End
+                | KeyCode::PageUp
+                | KeyCode::PageDown => {
+                    self.move_point(*code);
                 },
                 _ => (),
                 }
         }
+    }
+
+    fn move_point(&mut self, key_code: KeyCode) -> Result<(),std::io::Error> {
+        let Size{height,width} = Terminal::term_size()?;
+        match key_code {
+            KeyCode::Left => {
+                self.mouse_position.x = max(0,self.mouse_position.x.saturating_sub(1));
+            },
+            KeyCode::Right => {
+                self.mouse_position.x = min(self.mouse_position.x.saturating_add(1),width-1);
+            },
+            KeyCode::Up => {
+                self.mouse_position.y = max(0,self.mouse_position.y.saturating_sub(1));
+            },
+            KeyCode::Down => {
+                self.mouse_position.y = min(self.mouse_position.y.saturating_add(1),height-1);
+            },
+            KeyCode::PageUp => {
+                self.mouse_position.y = 0;
+            },
+            KeyCode::PageDown => {
+                self.mouse_position.y = height-1;
+            },
+            KeyCode::Home => {
+                self.mouse_position.x = 0;
+            },
+            KeyCode::End => {
+                self.mouse_position.x = width-1;
+            },
+            _ => (),
+        }
+        Ok(())
+
     }
 
     fn draw_rows() -> Result<(),std::io::Error> {
