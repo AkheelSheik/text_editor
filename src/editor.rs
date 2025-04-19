@@ -88,7 +88,7 @@ impl Editor {
         let main_position_x = width/2 - half_message;
         let vertical = (height/3) as u16;
         let first_set_of_space = " ".repeat((main_position_x-1).into());
-        let second_set_of_space = " ".repeat((width-(main_position_x+message_length)).into());
+        // let second_set_of_space = " ".repeat((width-(main_position_x+message_length-1)).into());
 
 
         Terminal::write(&"\r\n".repeat(vertical.into()));
@@ -96,7 +96,6 @@ impl Editor {
         Terminal::write("~")?;
         Terminal::write(&first_set_of_space)?;
         Terminal::write("Text Editor 1.0")?;
-        Terminal::write(&second_set_of_space)?;
         Terminal::flush();
         Ok(())
     }
