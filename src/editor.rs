@@ -7,6 +7,9 @@ pub struct Editor {
     should_quit: bool,
 }
 
+const NAME: &str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 impl Editor {
     pub fn new() -> Self {
         Editor { should_quit: false }
@@ -26,8 +29,6 @@ impl Editor {
             Terminal::write("Goodbye!");
         } else {
             Self::draw_rows();
-            Terminal::move_to_cursor(Position {x:0,y:0});
-            Self::draw_welcome()?;
             Terminal::move_to_cursor(Position {x:0,y:0});
         }
         Terminal::show_cursor();
@@ -55,7 +56,7 @@ impl Editor {
             println!("{code} {modifiers}");
             match *code {
                 Char('q') => {
-                        if modifiers == &KeyModifiers::CONTROL {
+                        if *modifiers == KeyModifiers::CONTROL {
                             self.should_quit = true;
                         }
                     },
@@ -66,11 +67,28 @@ impl Editor {
 
     fn draw_rows() -> Result<(),std::io::Error> {
         let character = "~";
-        let Size{height,..} = Terminal::term_size()?;
+        let Size{height,width} = Terminal::term_size()?;
+        let message = format!("{NAME} -- version {VERSION}");
+        let message_length = message.len() as u16;
+        let half_message:u16 = message_length/2;
+
+        let main_position_x = width/2 - half_message;
+        let vertical = (height/3) as u16;
+        let first_set_of_space = " ".repeat((main_position_x-1).into());
+
+
+
+
         
         for i in 0..height {
             Terminal::clear_line()?;
             Terminal::write(character)?;
+            
+            if i == height/3 {
+                Terminal::write(&first_set_of_space)?;
+                Terminal::write(&message)?;
+            }
+
             if i + 1 < height {
                 Terminal::write("\r\n")?;
             }
@@ -78,25 +96,4 @@ impl Editor {
        Terminal::flush();
        Ok(())
     }
-
-    fn draw_welcome() -> Result<(),std::io::Error> {
-        let message = "Text Editor 1.0";
-        let Size{height,width} = Terminal::term_size()?;
-
-        let message_length = "Text Editor 1.0".len() as u16;
-        let half_message:u16 = message_length/2;
-        let main_position_x = width/2 - half_message;
-        let vertical = (height/3) as u16;
-        let first_set_of_space = " ".repeat((main_position_x-1).into());
-        // let second_set_of_space = " ".repeat((width-(main_position_x+message_length-1)).into());
-
-
-        Terminal::write(&"\r\n".repeat(vertical.into()));
-        Terminal::clear_line()?;
-        Terminal::write("~")?;
-        Terminal::write(&first_set_of_space)?;
-        Terminal::write("Text Editor 1.0")?;
-        Terminal::flush();
-        Ok(())
-    }
-}
+}    
