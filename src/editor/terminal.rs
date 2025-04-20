@@ -17,8 +17,8 @@ pub struct Size {
 
 #[derive(Copy,Clone)]
 pub struct Position {
-    pub x: u16,
-    pub y: u16
+    pub col: usize,
+    pub row: usize,
 }
 
 pub struct Terminal {}
@@ -33,18 +33,18 @@ impl Terminal {
     pub fn initalize() -> Result<(), std::io::Error> {
         enable_raw_mode()?;
         Self::clear_screen();
-        Self::move_to_cursor(Position {x:0,y:0})?;
+        Self::move_to_caret(Position {col:0,row:0})?;
         Self::flush()?;
         Ok(())
     }
 
-    pub fn hide_cursor() -> Result<(),std::io::Error> {
+    pub fn hide_caret() -> Result<(),std::io::Error> {
         Self::queue_command(Hide)?;
         Ok(())
 
     }
 
-    pub fn show_cursor() -> Result<(),std::io::Error> {
+    pub fn show_caret() -> Result<(),std::io::Error> {
         Self::queue_command(Show)?;
         Ok(())
     }
@@ -69,8 +69,8 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn move_to_cursor(position: Position) -> Result<(), std::io::Error> {       
-        Self::queue_command(MoveTo(position.x,position.y))?;
+    pub fn move_to_caret(position: Position) -> Result<(), std::io::Error> {       
+        Self::queue_command(MoveTo(position.col as u16,position.row as u16))?;
         Ok(())
     }
 
