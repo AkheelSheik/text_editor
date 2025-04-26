@@ -1,9 +1,12 @@
 
 // author : Akheel Sheik
 mod terminal;
+mod view;
+mod buffer;
 use crossterm::event::{read, Event::Key,KeyEvent,KeyModifiers,Event};
 use crossterm::event::{KeyCode,KeyEventKind};
 use terminal::{Terminal,Size,Position};
+use view::{View};
 use core::cmp::{min,max};
 
 
@@ -16,15 +19,15 @@ struct Location {
 pub struct Editor {
     should_quit: bool,
     location: Location,
+    view: View,
 }
 
-const NAME: &str = env!("CARGO_PKG_NAME");
-const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 
 impl Editor {
 
     pub fn new() -> Self {
-        Editor { should_quit: false, location: Location{x:0,y:0} }
+        Editor { should_quit: false, location: Location{x:0,y:0},view:View::default() }
     }
 
     pub fn run(&mut self) {
@@ -34,14 +37,14 @@ impl Editor {
         result.unwrap();
     }
 
-    fn refresh_screen(&self) -> Result<(), std::io::Error> {
+    fn refresh_screen(&mut self) -> Result<(), std::io::Error> {
         Terminal::hide_caret();
         if self.should_quit{
             Terminal::clear_screen()?;
             Terminal::write("Goodbye!");
         } else {
             Terminal::move_to_caret(Position {col:0,row:0});
-            Self::draw_rows();
+            self.view.render();
             Terminal::move_to_caret(Position {col:self.location.x,row:self.location.y});
         }
         Terminal::show_caret();
@@ -119,33 +122,5 @@ impl Editor {
             _ => (),
         }
         Ok(())
-    }
-
-    fn draw_rows() -> Result<(),std::io::Error> {
-
-        let Size{height,width} = Terminal::term_size()?;
-        let character = "~";
-        let message = format!("{NAME} -- version {VERSION}");
-        let message_length = message.len() as u16;
-        let half_message:u16 = message_length/2;
-        let main_position_x = width/2 - half_message;
-        let vertical = (height/3) as u16;
-        let first_set_of_space = " ".repeat((main_position_x-1).into());
-        
-        for i in 0..height {
-            Terminal::clear_line()?;
-            Terminal::write(character)?;
-            
-            if i == vertical {
-                Terminal::write(&first_set_of_space)?;
-                Terminal::write(&message)?;
-            }
-
-            if i.saturating_add(1) < height {
-                Terminal::write("\r\n")?;
-            }
-        }
-       Terminal::flush();
-       Ok(())
     }
 }    

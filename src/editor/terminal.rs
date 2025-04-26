@@ -55,7 +55,7 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn write<T: Display>(string: T) -> Result<(),std::io::Error> {
+    pub fn write(string: &str) -> Result<(),std::io::Error> {
         Self::queue_command(Print(string))?;
         Ok(())
     }
