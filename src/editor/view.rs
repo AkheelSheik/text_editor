@@ -13,19 +13,19 @@ pub struct View {
 impl View {
 
     pub fn render(&mut self) -> Result<(),std::io::Error> {
-        let height = Terminal::term_size()?.height;
-        let vertical = (height/3) as u16;
+        let Size { height, .. } = Terminal::term_size()?;       
+        let vertical = (height/3);
         self.buffer.line.push(String::from("Hello, text!"));
 
         for i in 0..height {
             Terminal::clear_line()?;
-
+            if let Some(line) = self.buffer.line.get(i as usize) {
+                Terminal::write(line)?;
+                Terminal::write("\r\n")?;
+            }
+            
             if i == vertical {
                 Self::draw_welcome_message()?;
-            } else if self.buffer.line.len() > 0 {
-                for i in 1..self.buffer.line.len() {
-                    Terminal::write(self.buffer.line.get(i).unwrap())?
-                }
             } else {
                 Self::draw_empty_row()?;
             }
