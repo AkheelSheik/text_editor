@@ -39,7 +39,7 @@ impl Editor {
 
     fn refresh_screen(&mut self) -> Result<(), std::io::Error> {
         Terminal::hide_caret();
-        if self.should_quit{
+        if self.should_quit {
             Terminal::clear_screen()?;
             Terminal::write("Goodbye!");
         } else {

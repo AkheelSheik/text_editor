@@ -6,31 +6,31 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Default)]
 pub struct View {
-    buffer: Buffer,
+    buffer: Buffer
 }
 
 
 impl View {
 
-    pub fn render(&mut self) -> Result<(),std::io::Error> {
+    pub fn render(&self) -> Result<(),std::io::Error> {
         let Size { height, .. } = Terminal::term_size()?;       
         let vertical = (height/3);
-        self.buffer.line.push(String::from("Hello, text!"));
 
-        for i in 0..height {
+        for current_row in 0..height {
             Terminal::clear_line()?;
-            if let Some(line) = self.buffer.line.get(i as usize) {
+            if let Some(line) = self.buffer.line.get(current_row as usize) {
                 Terminal::write(line)?;
                 Terminal::write("\r\n")?;
+                continue;
             }
             
-            if i == vertical {
+            if current_row == vertical {
                 Self::draw_welcome_message()?;
             } else {
                 Self::draw_empty_row()?;
             }
 
-            if i.saturating_add(1) < height {
+            if current_row.saturating_add(1) < height {
                 Terminal::write("\r\n")?;
             }
         }
