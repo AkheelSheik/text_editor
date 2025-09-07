@@ -30,6 +30,13 @@ impl Editor {
         Editor { should_quit: false, location: Location{x:0,y:0},view:View::default() }
     }
 
+    pub fn check(&mut self) {
+        let args: Vec<String> = std::env::args().collect();
+        if let Some(first_arg) = args.get(1) {
+            self.view.load(first_arg);
+        }
+    }
+
     pub fn run(&mut self) {
         Terminal::initalize().unwrap();
         let result = self.repl();

@@ -19,15 +19,18 @@ impl View {
         for current_row in 0..height {
             Terminal::clear_line()?;
             if let Some(line) = self.buffer.line.get(current_row as usize) {
+                // println!("{}",line);
                 Terminal::write(line)?;
                 Terminal::write("\r\n")?;
                 continue;
+            } else{
+                Self::draw_empty_row()?;
             }
             
             if current_row == vertical {
-                Self::draw_welcome_message()?;
-            } else {
-                Self::draw_empty_row()?;
+                if self.buffer.is_empty() == false {
+                    Self::draw_welcome_message()?;
+                }
             }
 
             if current_row.saturating_add(1) < height {
@@ -36,6 +39,15 @@ impl View {
         }
        Terminal::flush();
        Ok(())
+    }
+
+    pub fn load(&mut self,file_name: &str) -> Result<(),std::io::Error>{
+        let file_contents = std::fs::read_to_string(file_name)?;
+
+        for line in file_contents.lines() {
+            self.buffer.line.push(line.to_string());
+        }
+        Ok(())
     }
 
     fn draw_empty_row() -> Result<(),std::io::Error> {
